@@ -297,7 +297,7 @@ end
 function update!(abq::AbqModel)
 	updateNodes!(abq)
 	updatePBC!(abq)
-	updateSteps!(abq)
+	# updateSteps!(abq)
 end
 
 """
