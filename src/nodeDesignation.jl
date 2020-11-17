@@ -1,61 +1,32 @@
 #=
 	Constant for defining location of vertices
 	Each array specifies the positioning of the
-	in terms of relative I-II-III-coordinates.
+	in terms of relative I-II-coordinates.
 =#
-const vertices = Dict("SWB"=>[0,0,0],
-					  "SWT"=>[1,0,0],
-					  "NWB"=>[0,1,0],
-					  "NWT"=>[1,1,0],
-					  "SEB"=>[0,0,1],
-					  "SET"=>[1,0,1],
-					  "NEB"=>[0,1,1],
-					  "NET"=>[1,1,1])
+const vertices = Dict("SW"=>[0,0],
+					  "NW"=>[0,1],
+					  "SE"=>[1,0],
+					  "NE"=>[1,1])
 
 #=
 	Constant for defining location of edges
 	Each array specifies the positioning of the
-	in terms of relative I-II-III-coordinates.
+	in terms of relative I-II-coordinates.
 	The first number indicates the axis in which
 	the edge is oriented, the remaining numbers
 	define the coordinates of the edge normal to
 	the orientation axis.
 =#
-const edges = Dict("SW"=>[1,0,0],
-				   "SE"=>[1,0,1],
-				   "NW"=>[1,1,0],
-				   "NE"=>[1,1,1],
-				   "WB"=>[2,0,0],
-				   "WT"=>[2,1,0],
-				   "EB"=>[2,0,1],
-				   "ET"=>[2,1,1],
-				   "SB"=>[3,0,0],
-				   "ST"=>[3,1,0],
-				   "NB"=>[3,0,1],
-				   "NT"=>[3,1,1])
+const edges = Dict("S"=>[1,0],
+				   "N"=>[1,1],
+				   "W"=>[2,0],
+				   "E"=>[2,1])
 #=
 	Define which coordinates are defined by
-	the second and third number of the arrays
+	the second number of the arrays
 	in edges.
 =#
-const edgeCS = [2 3;1 3;1 2]
-
-#=
-	Constant for defining location of faces
-	Each array specifies the positioning of the
-	in terms of relative I-II-III-coordinates.
-	The first number indicates the normal axis of
-	the face, while the second number defines the
-	faces coordinate in that direction.
-=#
-const faces = Dict("B"=>[1,0],
-				   "T"=>[1,1],
-				   "S"=>[2,0],
-				   "N"=>[2,1],
-				   "W"=>[3,0],
-				   "E"=>[3,1])
-
-const faceCS = [2 3;1 3;1 2]
+const edgeCS = [2;1]
 
 """
 
@@ -89,7 +60,7 @@ Sorting considers x-coordinates first, y-coordinates second, and z-coordinates l
 """
 function sortNodes(nodes::Array{GlobNode,1})
 	# Array with weighting factors for sorting of nodes
-	weights = [1e11 1e5 1]
+	weights = [1e5 1]
 	# Initiate array, soon-to-hold the values decisive for sorting
 	sortVals = Array{Float64,1}()
 	# Fill array sortVals with values, calculated by coordinates
@@ -113,8 +84,7 @@ function findVertex(abq::AbqModel, name::AbstractString)
 	nodeBool = map(abq.nodes) do n
 		!(n.instance in abq.ecc) && # Is instance containing node in ecceptions?
 		isEqual(n.node.coords[abq.csys[1]], abq.minC[abq.csys[1]] + vertices[name][1] * abq.dim[abq.csys[1]], abq.tol) &&
-		isEqual(n.node.coords[abq.csys[2]], abq.minC[abq.csys[2]] + vertices[name][2] * abq.dim[abq.csys[2]], abq.tol) &&
-		isEqual(n.node.coords[abq.csys[3]], abq.minC[abq.csys[3]] + vertices[name][3] * abq.dim[abq.csys[3]], abq.tol)
+		isEqual(n.node.coords[abq.csys[2]], abq.minC[abq.csys[2]] + vertices[name][2] * abq.dim[abq.csys[2]], abq.tol)
 	end
 	if length(abq.nodes[nodeBool]) != 1
 		throw(ToleranceError)
@@ -142,14 +112,12 @@ end
 """
 function findEdge(abq::AbqModel, name::AbstractString)
 	axis1 = abq.csys[edges[name][1]]
-	axis2 = abq.csys[edgeCS[edges[name][1],1]]
-	axis3 = abq.csys[edgeCS[edges[name][1],2]]
+	axis2 = abq.csys[edgeCS[edges[name][1]]]
 	nodeBool = map(abq.nodes) do n
 		!(n.instance in abq.ecc) && # Is instance containing node in ecceptions?
 		n.node.coords[axis1] > abq.minC[axis1] + abq.tol &&
 		n.node.coords[axis1] < abq.minC[axis1] + abq.dim[axis1] - abq.tol &&
-		isEqual(n.node.coords[axis2], abq.minC[axis2] + edges[name][2]*abq.dim[axis2], abq.tol) &&
-		isEqual(n.node.coords[axis3], abq.minC[axis3] + edges[name][3]*abq.dim[axis3], abq.tol)
+		isEqual(n.node.coords[axis2], abq.minC[axis2] + edges[name][2]*abq.dim[axis2], abq.tol)
 	end
 	return abq.nodes[nodeBool]
 end
@@ -164,52 +132,9 @@ function findEdges!(abq::AbqModel)
 		abq.edges[e] = sortNodes(findEdge(abq, e))
 	end
 	# Check if corresponding edges have equal node numbers
-	checkNum(abq.edges,"SW","NW")
-	checkNum(abq.edges,"SW","SE")
-	checkNum(abq.edges,"SW","NE")
-	checkNum(abq.edges,"WB","EB")
-	checkNum(abq.edges,"WT","ET")
-	checkNum(abq.edges,"SB","NB")
-	checkNum(abq.edges,"ST","NT")
+	checkNum(abq.edges,"S","N")
+	checkNum(abq.edges,"W","E")
 	println("Edges written to AbqModel.")
-	return
-end
-
-
-"""
-
-	findFace(abq::AbqModel, name::AbstractString)
-
-"""
-function findFace(abq::AbqModel, name::AbstractString)
-	axis1 = abq.csys[faces[name][1]]
-	axis2 = abq.csys[faceCS[faces[name][1],1]]
-	axis3 = abq.csys[faceCS[faces[name][1],2]]
-	nodeBool = map(abq.nodes) do n
-		!(n.instance in abq.ecc) && # Is instance containing node in ecceptions?
-		n.node.coords[axis2] > abq.minC[axis2] + abq.tol &&
-		n.node.coords[axis2] < abq.minC[axis2] + abq.dim[axis2] - abq.tol &&
-		n.node.coords[axis3] > abq.minC[axis3] + abq.tol &&
-		n.node.coords[axis3] < abq.minC[axis3] + abq.dim[axis3] - abq.tol &&
-		isEqual(n.node.coords[axis1], abq.minC[axis1] + faces[name][2]*abq.dim[axis1], abq.tol)
-	end
-	return abq.nodes[nodeBool]
-end
-
-"""
-
-	findFaces!(abq::AbqModel)
-
-"""
-function findFaces!(abq::AbqModel)
-	for f in keys(faces)
-		abq.faces[f] = sortNodes(findFace(abq, f))
-	end
-	# Check if faces West and East have equal number of nodes
-	checkNum(abq.faces,"W","E")
-	# Check if faces South and North have equal number of nodes
-	checkNum(abq.faces,"S","N")
-	println("Faces written to AbqModel.")
 	return
 end
 
