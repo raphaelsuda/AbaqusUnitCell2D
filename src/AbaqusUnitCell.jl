@@ -244,7 +244,7 @@ end
 
 """
 function show(io::IO,n::Node)
-	print(io,"Node(<$(n.num)>, <$(n.coords[1]), $(n.coords[2]), $(n.coords[3])>)")
+	print(io,"Node(<$(n.num)>, <$(n.coords[1]), $(n.coords[2])>)")
 end
 
 """
@@ -253,7 +253,7 @@ end
 
 """
 function show(io::IO,n::GlobNode)
-	print(io,"GlobNode(<$(n.glob)@glob>, <$(n.node.num)@$(n.instance)>, <$(n.node.coords[1]), $(n.node.coords[2]), $(n.node.coords[3])>)")
+	print(io,"GlobNode(<$(n.glob)@glob>, <$(n.node.num)@$(n.instance)>, <$(n.node.coords[1]), $(n.node.coords[2])>)")
 end
 
 """
@@ -317,7 +317,7 @@ const float_re = "(-?\\d+.\\d*(e(\\+|-)\\d+)?)"
 
 Defines RegEx for finding Nodes in Input file.
 """
-const node_re = Regex("\\s*(\\d+),\\s*"*float_re*",\\s*"*float_re*",\\s*"*float_re)
+const node_re = Regex("\\s*(\\d+),\\s*"*float_re*",\\s*"*float_re)
 
 """
 
@@ -326,7 +326,7 @@ const node_re = Regex("\\s*(\\d+),\\s*"*float_re*",\\s*"*float_re*",\\s*"*float_
 """
 function matchIf(r::Regex,s::AbstractString,i::AbstractString)
 	m = match(r,s)
-	if m == nothing
+	if m === nothing
 		return i
 	else
 		return m.captures[1]
@@ -356,6 +356,7 @@ function rotate(c::Vector, rot_axis::Vector, angle::Number)
 		   +rot_axis[3]*sin(angle_rad)	+cos(angle_rad)				-rot_axis[1]*sin(angle_rad);
 		   -rot_axis[2]*sin(angle_rad)	+rot_axis[1]*sin(angle_rad)	+cos(angle_rad)]
 	R = R_1 + R_2
+	R = R[1:2,1:2]
 	return R*c
 end
 
@@ -372,7 +373,8 @@ function rotate(c::Vector, start_rot_axis::Vector, end_rot_axis::Vector, angle::
 		   +rot_axis[3]*sin(angle_rad)	+cos(angle_rad)				-rot_axis[1]*sin(angle_rad);
 		   -rot_axis[2]*sin(angle_rad)	+rot_axis[1]*sin(angle_rad)	+cos(angle_rad)]
 	R = R_1 + R_2
-	return R * (c - start_rot_axis) + start_rot_axis
+	R = R[1:2,1:2]
+	return R * (c - start_rot_axis[1:2]) + start_rot_axis[1:2]
 end
 
 """
@@ -401,7 +403,7 @@ function load_rotate(rot_line::AbstractString)
 end
 
 function translate(node::Node,trans_vec::Vector)
-	return Node(node.num, node.coords+trans_vec)
+	return Node(node.num, node.coords+trans_vec[1:2])
 end
 
 function rotate(node::Node, rot_vec::Vector, angle_deg::Number)
@@ -448,8 +450,8 @@ struct DimensionError <: Exception end
 
 """
 function loadNode(nodeLine::Line)
-	props = match(node_re,value(nodeLine)).captures[[true,true,false,false,true,false,false,true,false,false]]
-	return Node(parse(Int,props[1]), round.([parse(Float64,props[2]), parse(Float64,props[3]), parse(Float64,props[4])],digits=5))
+	props = match(node_re,value(nodeLine)).captures[[true,true,false,false,true,false,false]]
+	return Node(parse(Int,props[1]), round.([parse(Float64,props[2]), parse(Float64,props[3])],digits=5))
 end
 
 """
@@ -828,11 +830,8 @@ function getLength(nodes::Array{GlobNode})
 	y = map(nodes) do n
 		n.node.coords[2]
 	end
-	z = map(nodes) do n
-		n.node.coords[3]
-	end
-	min = [minimum(x), minimum(y), minimum(z)]
-	max = [maximum(x), maximum(y), maximum(z)]
+	min = [minimum(x), minimum(y)]
+	max = [maximum(x), maximum(y)]
 	return min, max, max-min
 end
 

@@ -12,7 +12,6 @@ mutable struct AbqModel
 	parts::Dict{String,Part}
 	instances::Array{Instance,1}
 	nodes::Array{GlobNode,1}
-	slaves::Dict{String,Array{Int64,1}}
 	minC::Vector
 	maxC::Vector
 	dim::Vector
@@ -37,9 +36,8 @@ mutable struct AbqModel
 	function AbqModel(file::AbstractString)
 		inp = load(file)
 		parts, instances, nodes = loadGlobNodes(inp)
-		slaves = collect_slaves(inp)
 		minC, maxC, dim = getLength(nodes)
-		refAxis = "z"
+		refAxis = "x"
 		defRA = true
 		csys = coords[refAxis]
 		tol = 0.001
@@ -48,11 +46,11 @@ mutable struct AbqModel
 		vert = Dict{AbstractString,Node}()
 		edge = Dict{AbstractString,Array{Node,1}}()
 		face = Dict{AbstractString,Array{Node,1}}()
-		pbcdim = 3
+		pbcdim = 1
 		defDim = true
 		eqns = Array{Equation,1}()
 		steps = Array{Step,1}()
-		new(file, inp, parts, instances, nodes, slaves, minC, maxC, dim,
+		new(file, inp, parts, instances, nodes, minC, maxC, dim,
 			refAxis, defRA, csys, tol, defTol, ecc, vert, edge, face, pbcdim, defDim, eqns, steps)
 	end
 end
@@ -72,7 +70,7 @@ end
 
 Defines constant for easily rotating the boundary conditions with respect to the reference axis.
 """
-const coords = Dict("x"=>[1,2,3], "y"=>[2,3,1], "z"=>[3,1,2])
+const coords = Dict("x"=>[1,2], "y"=>[2,1])
 
 """
 
@@ -97,7 +95,7 @@ end
 
 """
 function setPBCdim!(abq::AbqModel, dim::Int)
-	if dim > 0 && dim < 4
+	if dim > 0 && dim < 3
 		abq.pbcdim = dim
 		abq.defDim = false
 		println("PBCs are set to $(dim)-dimensional periodicity.")
@@ -169,14 +167,6 @@ function updateNodes!(abq::AbqModel)
 		i = 1
 		for n in abq.edges[e]
 			append!(sets, nset("$(e)-$(i)",n.node.num,n.instance))
-			i += 1
-		end
-	end
-	# Append the nset-definition for each edge-node to the array sets
-	for f in keys(abq.faces)
-		i = 1
-		for n in abq.faces[f]
-			append!(sets, nset("$(f)-$(i)",n.node.num,n.instance))
 			i += 1
 		end
 	end
