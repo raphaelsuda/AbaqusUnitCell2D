@@ -170,6 +170,14 @@ function updateNodes!(abq::AbqModel)
 			i += 1
 		end
 	end
+	# Append the nset-definition for each edge-node to the array sets
+	for f in keys(abq.faces)
+		i = 1
+		for n in abq.faces[f]
+			append!(sets, nset("$(f)-$(i)",n.node.num,n.instance))
+			i += 1
+		end
+	end
 	insert!(Line(abq.inp,r"End Assembly"),sets)
 	println("Node designation added to input file.")
 	return

@@ -1,4 +1,4 @@
-module AbaqusUnitCell
+module AbaqusUnitCell2D
 
 export AbqModel,
 	   pbc!,
