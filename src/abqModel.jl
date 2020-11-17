@@ -158,23 +158,15 @@ end
 function updateNodes!(abq::AbqModel)
 	# Initiate array soon-to-contain the definition of each needed node set for the PBC
 	sets = Array{String,1}()
-	# 	# Append the nset-definition for each vertex to the array sets
-	# 	for v in keys(abq.vertices)
-	# 		append!(sets,nset(v,abq.vertices[v].node.num,abq.vertices[v].instance))
-	# 	end
+	# Append the nset-definition for each vertex to the array sets
+	for v in keys(abq.vertices)
+		append!(sets,nset(v,abq.vertices[v].node.num,abq.vertices[v].instance))
+	end
 	# Append the nset-definition for each edge-node to the array sets
 	for e in keys(abq.edges)
 		i = 1
 		for n in abq.edges[e]
 			append!(sets, nset("$(e)-$(i)",n.node.num,n.instance))
-			i += 1
-		end
-	end
-	# Append the nset-definition for each edge-node to the array sets
-	for f in keys(abq.faces)
-		i = 1
-		for n in abq.faces[f]
-			append!(sets, nset("$(f)-$(i)",n.node.num,n.instance))
 			i += 1
 		end
 	end
