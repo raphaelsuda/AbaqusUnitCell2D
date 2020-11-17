@@ -25,8 +25,6 @@ function pbc!(abq::AbqModel)
 		pbc1D!(abq)
 	elseif abq.pbcdim == 2
 		pbc2D!(abq)
-	elseif abq.pbcdim == 3
-		pbc3D!(abq)
 	end
 return
 end
