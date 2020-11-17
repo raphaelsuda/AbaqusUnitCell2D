@@ -159,7 +159,6 @@ function nodeDesignation!(abq::AbqModel)
 	abq.defRA ? println("Reference axis not explicitly set. Default $(abq.refAxis) is used.") : print("")
 	#	findVertices!(abq)
 	findEdges!(abq)
-	findFaces!(abq)
 	println("Node designation written to AbqModel.")
 	return
 end
