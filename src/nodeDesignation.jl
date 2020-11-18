@@ -113,11 +113,20 @@ end
 function findEdge(abq::AbqModel, name::AbstractString)
 	axis1 = abq.csys[edges[name][1]]
 	axis2 = abq.csys[edgeCS[edges[name][1]]]
-	nodeBool = map(abq.nodes) do n
-		!(n.instance in abq.ecc) && # Is instance containing node in ecceptions?
-		n.node.coords[axis1] > abq.minC[axis1] + abq.tol &&
-		n.node.coords[axis1] < abq.minC[axis1] + abq.dim[axis1] - abq.tol &&
-		isEqual(n.node.coords[axis2], abq.minC[axis2] + edges[name][2]*abq.dim[axis2], abq.tol)
+	if abq.fvert
+		nodeBool = map(abq.nodes) do n
+			!(n.instance in abq.ecc) && # Is instance containing node in ecceptions?
+			n.node.coords[axis1] > abq.minC[axis1] + abq.tol &&
+			n.node.coords[axis1] < abq.minC[axis1] + abq.dim[axis1] - abq.tol &&
+			isEqual(n.node.coords[axis2], abq.minC[axis2] + edges[name][2]*abq.dim[axis2], abq.tol)
+		end
+	else
+		nodeBool = map(abq.nodes) do n
+			!(n.instance in abq.ecc) && # Is instance containing node in ecceptions?
+			# n.node.coords[axis1] > abq.minC[axis1] + abq.tol &&
+			# n.node.coords[axis1] < abq.minC[axis1] + abq.dim[axis1] - abq.tol &&
+			isEqual(n.node.coords[axis2], abq.minC[axis2] + edges[name][2]*abq.dim[axis2], abq.tol)
+		end
 	end
 	return abq.nodes[nodeBool]
 end
