@@ -77,7 +77,7 @@ Defines constant for easily rotating the boundary conditions with respect to the
 const coords = Dict("x"=>[1,2], "y"=>[2,1])
 
 
-function setfvert(abd::AbqModel, fvert::Bool)
+function setfvert(abq::AbqModel, fvert::Bool)
 	abq.fvert = fvert
 	abq.deffvert = false
 	if fvert == false
