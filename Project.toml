@@ -1,6 +1,6 @@
 name = "AbaqusUnitCell2D"
-uuid = "af3e129c-b24d-41b7-9263-67b25837aa88"
-authors = ["Raphael Suda <raphael.suda@gmx.net>"]
+uuid = "aad359ed-a677-4ee1-8d11-07b4cf147889"
+authors = ["Raphael <raphael.suda@gmx.net>"]
 version = "0.1.0"
 
 [deps]
